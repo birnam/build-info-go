@@ -64,6 +64,23 @@ func CreateNpmTest(t *testing.T, testdataPath, projectDirName string, withOsInPa
 	return CreateTestProject(t, path)
 }
 
+// Return the project path based on 'projectDir'.
+// testdataPath - abs path to testdata dir.
+// projectDirName - name of the project's directory.
+func CreatePnpmTest(t *testing.T, testdataPath, projectDirName string, version *version.Version) (tmpProjectPath string, cleanup func()) {
+	var pnpmVersionDir string
+	switch {
+	case version.AtLeast("10.0.0"):
+		pnpmVersionDir = "pnpmv10"
+	case version.AtLeast("9.0.0"):
+		pnpmVersionDir = "pnpmv9"
+	case version.AtLeast("8.0.0"):
+		pnpmVersionDir = "pnpmv8"
+	}
+	path := filepath.Join(testdataPath, "pnpm", projectDirName, pnpmVersionDir)
+	return CreateTestProject(t, path)
+}
+
 func PrintBuildInfoMismatch(t *testing.T, expected, actual []entities.Module) {
 	excpectedStr, err := json.MarshalIndent(expected, "", "  ")
 	assert.NoError(t, err)
