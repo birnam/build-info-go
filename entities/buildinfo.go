@@ -31,6 +31,7 @@ const (
 	Gradle    ModuleType = "gradle"
 	Docker    ModuleType = "docker"
 	Npm       ModuleType = "npm"
+	Pnpm      ModuleType = "pnpm"
 	Nuget     ModuleType = "nuget"
 	Go        ModuleType = "go"
 	Python    ModuleType = "python"
