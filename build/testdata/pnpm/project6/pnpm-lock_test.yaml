@@ -1,0 +1,38 @@
+lockfileVersion: '6.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+dependencies:
+  cors.js:
+    specifier: 0.0.1-security
+    version: 0.0.1-security
+  lightweight:
+    specifier: ^0.1.0
+    version: 0.1.0
+  minimist:
+    specifier: ^0.1.0
+    version: 0.1.0
+  underscore:
+    specifier: ^1.13.6
+    version: 1.13.7
+
+packages:
+
+  /cors.js@0.0.1-security:
+    resolution: {integrity: sha512-Cu4D8imt82jd/AuMBwTpjrXiULhaMdig2MD2NBhRKbbcuCTWeyN2070SCEDaJuI/4kA1J9Nnvj6/cBe/zfnrrw==}
+    dev: false
+
+  /lightweight@0.1.0:
+    resolution: {integrity: sha512-10pYSQA9EJqZZnXDR0urhg8Z0Y1XnRfi41ZFj3ZFTKJ5PjRq82HzT7LKlPyxewy3w2WA2POfi3jQQn7Y53oPcQ==}
+    hasBin: true
+    dev: false
+
+  /minimist@0.1.0:
+    resolution: {integrity: sha512-wR5Ipl99t0mTGwLjQJnBjrP/O7zBbLZqvA3aw32DmLx+nXHfWctUjzDjnDx09pX1Po86WFQazF9xUzfMea3Cnw==}
+    dev: false
+
+  /underscore@1.13.7:
+    resolution: {integrity: sha512-GMXzWtsc57XAtguZgaQViUOzs0KTkk8ojr3/xAxXLITqf/3EMwxC0inyETfDFjH/Krbhuep0HNbbjI9i/q3F3g==}
+    dev: false

@@ -1,0 +1,27 @@
+lockfileVersion: '6.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+dependencies:
+  xml:
+    specifier: 1.0.1
+    version: 1.0.1
+
+devDependencies:
+  json:
+    specifier: 9.0.6
+    version: 9.0.6
+
+packages:
+
+  /json@9.0.6:
+    resolution: {integrity: sha512-Nx+4WwMM1xadgqjjteOVEyjoIVq7fGH1hAlRDoxoq2tFzYsBYZDIKwYbyxolkTYwxsSOgAZD2ACLkeGjhFW2Jw==}
+    engines: {node: '>=0.10.0'}
+    hasBin: true
+    dev: true
+
+  /xml@1.0.1:
+    resolution: {integrity: sha512-huCv9IH9Tcf95zuYCsQraZtWnJvBtLVE0QHMOs8bWyZAFZNDcYjsPq1nEx8jKA9y+Beo9v+7OBPRisQTjinQMw==}
+    dev: false

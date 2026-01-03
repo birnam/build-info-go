@@ -1,0 +1,38 @@
+{
+    "name": "build-info-go-test-pnpm",
+    "number": "2",
+    "agent": {},
+    "buildAgent": {
+        "name": "GENERIC"
+    },
+    "modules": [
+        {
+            "type": "pnpm",
+            "id": "build-info-go-tests:v1.0.0",
+            "dependencies": [
+                {
+                    "id": "xml:1.0.1",
+                    "scopes": [
+                        "prod"
+                    ],
+                    "requestedBy": [
+                        [
+                            "build-info-go-tests:v1.0.0"
+                        ]
+                    ]
+                },
+                {
+                    "id": "json:9.0.6",
+                    "scopes": [
+                        "dev"
+                    ],
+                    "requestedBy": [
+                        [
+                            "build-info-go-tests:v1.0.0"
+                        ]
+                    ]
+                }
+            ]
+        }
+    ]
+}
