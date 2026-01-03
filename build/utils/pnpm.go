@@ -116,7 +116,7 @@ func runPnpmLsWithoutNodeModules(executablePath, srcPath string, pnpmParams Pnpm
 			return nil, err
 		}
 	}
-	// --lockfile-only was only added in version 10.23
+	// NOTE: unlike npm, if pnpm ls is ran WITHOUT install, the output does not include information on unmet dependencies
 	pnpmParams.Args = append(pnpmParams.Args, "--json", "--long")
 	data, errData, err := RunPnpmCmd(executablePath, srcPath, AppendPnpmCommand(pnpmParams.Args, "ls"), log)
 	if err != nil {
@@ -141,10 +141,6 @@ func isPnpmInstallRequired(srcPath string, pnpmParams PnpmTreeDepListParam, pnpm
 	isPnpmLockExist, err := utils.IsFileExists(filepath.Join(srcPath, "pnpm-lock.yaml"), false)
 	if err != nil {
 		return false, err
-	}
-
-	if !pnpmVersion.AtLeast("10.23") {
-		return true, nil
 	}
 
 	if len(pnpmParams.InstallCommandArgs) > 0 {
@@ -219,7 +215,6 @@ type pnpmLsDependency struct {
 	Name      string
 	Version   string
 	Resolved  string
-	Integrity string
 	InBundle  bool
 	Dev       bool
 	Optional  bool
@@ -314,9 +309,6 @@ func appendPnpmDependency(dependencies map[string]*pnpmDependencyInfo, dep *pnpm
 		}
 
 		dependencies[depId] = dependency
-	}
-	if dependencies[depId].Integrity == "" {
-		dependencies[depId].Integrity = dep.Integrity
 	}
 	dependencies[depId].Scopes = appendScopes(dependencies[depId].Scopes, scopes)
 	dependencies[depId].RequestedBy = append(dependencies[depId].RequestedBy, pathToRoot)

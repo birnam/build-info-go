@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jfrog/gofrog/crypto"
-
 	"github.com/jfrog/build-info-go/entities"
 	"github.com/stretchr/testify/require"
 
@@ -151,37 +149,6 @@ func TestPnpmBundledDependenciesList(t *testing.T) {
 	validatePnpmDependencies(t, projectPath, pnpmArgs)
 }
 
-// This case happens when the package-lock.json with property '"lockfileVersion": 1,' gets updated to version '"lockfileVersion": 2,' (from npm v6 to npm v7/v8).
-// Seems like the compatibility upgrades may result in dependencies losing their integrity.
-// We try to get the integrity from the cache index.
-func TestPnpmDependencyWithNoIntegrity(t *testing.T) {
-	pnpmVersion, _, err := GetPnpmVersionAndExecPath(pnpmLogger)
-	assert.NoError(t, err)
-
-	// Create the second pnpm project which has a transitive dependency without integrity (ansi-regex:5.0.0).
-	path, err := filepath.Abs(filepath.Join("..", "testdata"))
-	assert.NoError(t, err)
-	projectPath, cleanup := tests.CreatePnpmTest(t, path, "project2", pnpmVersion)
-	defer cleanup()
-
-	// Set the store-dir in .npmrc
-	cachePath := filepath.Join(projectPath, "tmpcache")
-	err = SetPnpmConfigCache(projectPath, cachePath, pnpmLogger)
-	assert.NoError(t, err)
-
-	// Run pnpm --frozen-lockfile to create this special case where the 'ansi-regex:5.0.0' is missing the integrity.
-	pnpmInstallArgs := []string{"--frozen-lockfile"}
-	pnpmListArgs := []string{}
-	_, _, err = RunPnpmCmd("pnpm", projectPath, AppendPnpmCommand(pnpmInstallArgs, pnpmInstallCommand), pnpmLogger)
-	assert.NoError(t, err)
-
-	// Calculate dependencies.
-	dependencies, err := CalculatePnpmDependenciesList("pnpm", projectPath, "jfrogtest", PnpmTreeDepListParam{Args: pnpmListArgs}, pnpmLogger)
-	assert.NoError(t, err)
-
-	assert.Greaterf(t, len(dependencies), 0, "Error: dependencies are not found!")
-}
-
 // This test case verifies that CalculateDependenciesMap correctly handles the exclusion of 'node_modules'
 // and updates 'package-lock.json' as required, based on the 'IgnoreNodeModules' and 'OverwritePackageLock' parameters.
 func TestPnpmDependencyPackageLockOnly(t *testing.T) {
@@ -213,8 +180,8 @@ func TestCalculatePnpmDependenciesMapWithProhibitedInstallation(t *testing.T) {
 
 	assert.Nil(t, dependencies)
 	assert.Error(t, err)
-	var installForbiddenErr *utils.ErrProjectNotInstalled
-	assert.True(t, errors.As(err, &installForbiddenErr))
+	var notInstalledError *utils.ErrProjectNotInstalled
+	assert.True(t, errors.As(err, &notInstalledError))
 }
 
 func getPnpmExpectedRespForTestDependencyPackageLockOnly() map[string]*pnpmDependencyInfo {
@@ -230,7 +197,6 @@ func getPnpmExpectedRespForTestDependencyPackageLockOnly() map[string]*pnpmDepen
 				Name:      "underscore",
 				Version:   "1.13.6",
 				Resolved:  "https://registry.npmjs.org/underscore/-/underscore-1.13.6.tgz",
-				Integrity: "sha512-+A5Sja4HP1M08MaXya7p5LvjuM7K6q/2EaC0+iovj/wOcMsTzMvDFbasi/oSapiwOlt252IqsKqPjCl7huKS0A==",
 			},
 		},
 		"cors.js:0.0.1-security": {
@@ -244,7 +210,6 @@ func getPnpmExpectedRespForTestDependencyPackageLockOnly() map[string]*pnpmDepen
 				Name:      "cors.js",
 				Version:   "0.0.1-security",
 				Resolved:  "https://registry.npmjs.org/cors.js/-/cors.js-0.0.1-security.tgz",
-				Integrity: "sha512-Cu4D8imt82jd/AuMBwTpjrXiULhaMdig2MD2NBhRKbbcuCTWeyN2070SCEDaJuI/4kA1J9Nnvj6/cBe/zfnrrw==",
 			},
 		},
 		"lightweight:0.1.0": {
@@ -258,7 +223,6 @@ func getPnpmExpectedRespForTestDependencyPackageLockOnly() map[string]*pnpmDepen
 				Name:      "lightweight",
 				Version:   "0.1.0",
 				Resolved:  "https://registry.npmjs.org/lightweight/-/lightweight-0.1.0.tgz",
-				Integrity: "sha512-10pYSQA9EJqZZnXDR0urhg8Z0Y1XnRfi41ZFj3ZFTKJ5PjRq82HzT7LKlPyxewy3w2WA2POfi3jQQn7Y53oPcQ==",
 			},
 		},
 		"minimist:0.1.0": {
@@ -272,7 +236,6 @@ func getPnpmExpectedRespForTestDependencyPackageLockOnly() map[string]*pnpmDepen
 				Name:      "minimist",
 				Version:   "0.1.0",
 				Resolved:  "https://registry.npmjs.org/minimist/-/minimist-0.1.0.tgz",
-				Integrity: "sha512-wR5Ipl99t0mTGwLjQJnBjrP/O7zBbLZqvA3aw32DmLx+nXHfWctUjzDjnDx09pX1Po86WFQazF9xUzfMea3Cnw==",
 			},
 		},
 	}
@@ -307,11 +270,14 @@ func TestPnpmDependenciesTreeDifferentBetweenOKs(t *testing.T) {
 	// Remove node_modules directory, then calculate dependencies by package-lock.
 	assert.NoError(t, utils.RemoveTempDir(filepath.Join(projectPath, "node_modules")))
 
+	// NOTE: unlike npm, if pnpm ls is called without node_modules, it will not show any dependencies.
+	// i.e. it can only list MET dependencies, so after deleting node_modules, the expected value for
+	// len(dependencies) is 0
 	dependencies, err = CalculatePnpmDependenciesList("pnpm", projectPath, "build-info-go-tests", PnpmTreeDepListParam{Args: pnpmListArgs}, pnpmLogger)
 	assert.NoError(t, err)
 
 	// Asserting there is at least one dependency.
-	assert.Greater(t, len(dependencies), 0, "Error: dependencies are not found!")
+	assert.Equal(t, len(dependencies), 0, "Error: pnpm should not list dependencies after removing node_modules!")
 }
 
 func TestPnpmProdFlag(t *testing.T) {
@@ -408,11 +374,14 @@ func validatePnpmDependencies(t *testing.T, projectPath string, pnpmListArgs []s
 	// Remove node_modules directory, then calculate dependencies by package-lock.
 	assert.NoError(t, utils.RemoveTempDir(filepath.Join(projectPath, "node_modules")))
 
+	// NOTE: unlike npm, if pnpm ls is called without node_modules, it will not show any dependencies.
+	// i.e. it can only list MET dependencies, so after deleting node_modules, the expected value for
+	// len(dependencies) is 0
 	dependencies, err = CalculatePnpmDependenciesList("pnpm", projectPath, "build-info-go-tests", PnpmTreeDepListParam{Args: pnpmListArgs}, pnpmLogger)
 	assert.NoError(t, err)
 
 	// Asserting there is at least one dependency.
-	assert.Greater(t, len(dependencies), 0, "Error: dependencies are not found!")
+	assert.Equal(t, len(dependencies), 0, "Error: pnpm should not list dependencies after removing node_modules!")
 }
 
 func TestParsePnpmDependenciesEdgeCases(t *testing.T) {
@@ -436,8 +405,7 @@ func TestParsePnpmDependenciesEdgeCases(t *testing.T) {
 			name:      "Git URL without hash in resolved",
 			inputJson: `{"my-pkg":{"resolved": "git+https://github.com/user/repo.git"}}`,
 			expectedId: func() string {
-				checksums, _ := crypto.CalcChecksums(strings.NewReader("git+https://github.com/user/repo.git"), crypto.SHA1)
-				return "my-pkg:" + checksums[crypto.SHA1]
+				return "my-pkg:"
 			}(),
 			shouldBeSkipped:  false,
 			expectParseError: false,
@@ -446,8 +414,7 @@ func TestParsePnpmDependenciesEdgeCases(t *testing.T) {
 			name:      "Local file path in resolved",
 			inputJson: `{"my-local-pkg":{"resolved": "file:../shared/my-local-pkg"}}`,
 			expectedId: func() string {
-				checksums, _ := crypto.CalcChecksums(strings.NewReader("file:../shared/my-local-pkg"), crypto.SHA1)
-				return "my-local-pkg:" + checksums[crypto.SHA1]
+				return "my-local-pkg:"
 			}(),
 			shouldBeSkipped:  false,
 			expectParseError: false,
@@ -456,8 +423,7 @@ func TestParsePnpmDependenciesEdgeCases(t *testing.T) {
 			name:      "Direct tarball URL in resolved",
 			inputJson: `{"my-tarball-pkg":{"resolved": "https://example.com/pkg-1.0.0.tgz"}}`,
 			expectedId: func() string {
-				checksums, _ := crypto.CalcChecksums(strings.NewReader("https://example.com/pkg-1.0.0.tgz"), crypto.SHA1)
-				return "my-tarball-pkg:" + checksums[crypto.SHA1]
+				return "my-tarball-pkg:"
 			}(),
 			shouldBeSkipped:  false,
 			expectParseError: false,
