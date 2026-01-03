@@ -455,6 +455,37 @@ func GetCommands(logger utils.Log) []*clitool.Command {
 				return printBuild(bld, context.String(formatFlag))
 			},
 		},
+		{
+			Name:      "pnpm",
+			Usage:     "Generate build-info for a pnpm project",
+			UsageText: "bi pnpm",
+			Flags:     flags,
+			Action: func(context *clitool.Context) (err error) {
+				service := build.NewBuildInfoService()
+				service.SetLogger(logger)
+				bld, err := service.GetOrCreateBuild("pnpm-build", "1")
+				if err != nil {
+					return
+				}
+				defer func() {
+					err = errors.Join(err, bld.Clean())
+				}()
+				pnpmModule, err := bld.AddPnpmModule("")
+				if err != nil {
+					return
+				}
+				formatValue, filteredArgs, err := extractStringFlag(context.Args().Slice(), formatFlag)
+				if err != nil {
+					return
+				}
+				listArgs := []string{}
+				pnpmModule.SetPnpmArgs(filteredArgs, listArgs)
+				if err = pnpmModule.Build(); err != nil {
+					return err
+				}
+				return printBuild(bld, formatValue)
+			},
+		},
 	}
 }
 

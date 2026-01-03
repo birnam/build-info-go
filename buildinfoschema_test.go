@@ -32,9 +32,16 @@ func TestYarnSchema(t *testing.T) {
 	validateBuildInfoSchema(t, "yarn", filepath.Join("yarn", "v2", "project"), func() {})
 }
 
+func TestPnpmSchema(t *testing.T) {
+	validateBuildInfoSchema(t, "pnpm", filepath.Join("pnpm", "project1", "pnpmv8"), func() {
+		_, _, err := buildutils.RunPnpmCmd("pnpm", "", []string{"install"}, &utils.NullLog{})
+		assert.NoError(t, err)
+	})
+}
+
 // Validate a build info schema for the input project.
 // t              - The testing object
-// commandName    - Command to run such as npm, yarn, mvn, and go
+// commandName    - Command to run such as npm, yarn, pnpm, mvn, and go
 // pathInTestData - The path of the test project in testdata dir
 // install        - Install the project, if needed
 func validateBuildInfoSchema(t *testing.T, commandName, pathInTestData string, install func()) {

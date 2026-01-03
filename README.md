@@ -379,6 +379,14 @@ bi yarn [Yarn command] [command options]
 
 Note: checksums calculation is not yet supported for Yarn projects.
 
+#### pnpm
+
+```shell
+bi pnpm [pnpm command] [command options]
+```
+
+Note: checksums calculation is not possible for pnpm projects.
+
 #### pip
 
 ```shell
@@ -513,6 +521,20 @@ err = yarnModule.Build()
 // You can also add artifacts to that module.
 artifact1 := entities.Artifact{Name: "json", Type: "tgz", Checksum: &entities.Checksum{Sha1: "123", Md5: "456"}}
 err = yarnModule.AddArtifacts(artifact1, artifact2, ...)
+```
+
+#### pnpm
+
+```go
+// You can pass an empty string as an argument, if the root of the pnpm project is the working directory.
+pnpmModule, err := bld.AddPnpmModule(pnpmProjectPath)
+// Checksum calculation is not supported for pnpm projects
+// Calculate the dependencies used by this module, and store them in the module struct.
+err = pnpmModule.CalcDependencies()
+
+// You can also add artifacts to that module.
+artifact1 := entities.Artifact{Name: "json", Type: "tgz"}
+err = pnpmModule.AddArtifacts(artifact1, artifact2, ...)
 ```
 
 #### Dotnet

@@ -9,6 +9,7 @@ type PackageManager string
 
 const (
 	Npm   PackageManager = "npm"
+	Pnpm  PackageManager = "pnpm"
 	Maven PackageManager = "maven"
 	Pip   PackageManager = "pip"
 	Go    PackageManager = "go"
@@ -41,6 +42,7 @@ func (err *ErrProjectNotInstalled) Error() string {
 func IsForbiddenOutput(tech PackageManager, cmdOutput string) bool {
 	switch tech {
 	case "npm":
+	case "pnpm":
 		return strings.Contains(strings.ToLower(cmdOutput), "403 forbidden")
 	case "maven":
 		return strings.Contains(cmdOutput, "status code: 403") ||
